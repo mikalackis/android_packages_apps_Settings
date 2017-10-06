@@ -88,6 +88,8 @@ public class WifiSetupActivity extends WifiPickerActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.v(TAG, "IN wifi setup activity");
+
         final Intent intent = getIntent();
         mFilter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
         mFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -167,6 +169,7 @@ public class WifiSetupActivity extends WifiPickerActivity
     @Override
     public void onResume() {
         super.onResume();
+        Log.v(TAG, "IN wifi RESUME activity");
         registerReceiver(mReceiver, mFilter);
         refreshConnectionState();
     }
@@ -179,6 +182,7 @@ public class WifiSetupActivity extends WifiPickerActivity
 
     @Override
     protected void onApplyThemeResource(Resources.Theme theme, int resid, boolean first) {
+        Log.v(TAG, "IN apply theme resource");
         resid = SetupWizardUtils.getTheme(getIntent());
         super.onApplyThemeResource(theme, resid, first);
     }
@@ -203,9 +207,11 @@ public class WifiSetupActivity extends WifiPickerActivity
     }
 
     public void onNavigationBarCreated(final NavigationBar bar) {
+        Log.v(TAG, "IN nav bar created");
         mNavigationBar = bar;
         bar.setNavigationBarListener(this);
         SetupWizardUtils.setImmersiveMode(this);
+        Log.v(TAG, "IN nav bar created done");
     }
 
     @Override

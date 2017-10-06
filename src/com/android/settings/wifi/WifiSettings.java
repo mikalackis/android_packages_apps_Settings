@@ -164,16 +164,19 @@ public class WifiSettings extends RestrictedSettingsFragment
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
+        Log.v(TAG, "enter onViewCreated");
         super.onViewCreated(view, savedInstanceState);
         final Activity activity = getActivity();
         if (activity != null) {
             mProgressHeader = (ProgressBar) setPinnedHeaderView(R.layout.wifi_progress_header);
         }
+        Log.v(TAG, "retur from onViewCreated");
     }
 
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+        Log.v(TAG, "enter oncreate");
         addPreferencesFromResource(R.xml.wifi_settings);
         mAddPreference = new Preference(getContext());
         mAddPreference.setIcon(R.drawable.ic_menu_add_inset);
@@ -183,6 +186,7 @@ public class WifiSettings extends RestrictedSettingsFragment
 
         mBgThread = new HandlerThread(TAG, Process.THREAD_PRIORITY_BACKGROUND);
         mBgThread.start();
+        Log.v(TAG, "retur oncreate");
     }
 
     @Override
@@ -194,6 +198,8 @@ public class WifiSettings extends RestrictedSettingsFragment
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+        Log.v(TAG, "retur onactivitycreate");
 
         mWifiTracker =
                 new WifiTracker(getActivity(), this, mBgThread.getLooper(), true, true, false);
