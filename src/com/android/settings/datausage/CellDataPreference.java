@@ -25,6 +25,7 @@ import android.os.Looper;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.Settings.Global;
+import android.support.v4.content.res.TypedArrayUtils;
 import android.support.v7.preference.PreferenceViewHolder;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
@@ -33,11 +34,12 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.widget.Checkable;
-import com.android.internal.logging.MetricsLogger;
-import com.android.internal.logging.MetricsProto.MetricsEvent;
+
+import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.settings.CustomDialogPreference;
 import com.android.settings.R;
 import com.android.settings.Utils;
+import com.android.settings.overlay.FeatureFactory;
 
 import java.util.List;
 
@@ -52,7 +54,9 @@ public class CellDataPreference extends CustomDialogPreference implements Templa
     private SubscriptionManager mSubscriptionManager;
 
     public CellDataPreference(Context context, AttributeSet attrs) {
-        super(context, attrs, android.R.attr.switchPreferenceStyle);
+        super(context, attrs, TypedArrayUtils.getAttr(context,
+                android.support.v7.preference.R.attr.switchPreferenceStyle,
+                android.R.attr.switchPreferenceStyle));
     }
 
     @Override
@@ -110,7 +114,9 @@ public class CellDataPreference extends CustomDialogPreference implements Templa
 
     @Override
     protected void performClick(View view) {
-        MetricsLogger.action(getContext(), MetricsEvent.ACTION_CELL_DATA_TOGGLE, !mChecked);
+        final Context context = getContext();
+        FeatureFactory.getFactory(context).getMetricsFeatureProvider()
+                .action(context, MetricsEvent.ACTION_CELL_DATA_TOGGLE, !mChecked);
         final SubscriptionInfo currentSir = mSubscriptionManager.getActiveSubscriptionInfo(
                 mSubId);
         final SubscriptionInfo nextSir = mSubscriptionManager.getDefaultDataSubscriptionInfo();

@@ -18,7 +18,6 @@ package com.android.settings.widget;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -33,15 +32,17 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.internal.util.HexDump;
 import com.android.settings.R;
 
+import com.android.settings.core.instrumentation.InstrumentedDialogFragment;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-public class CarrierDemoPasswordDialogFragment extends DialogFragment {
+public class CarrierDemoPasswordDialogFragment extends InstrumentedDialogFragment {
 
-    private static final String TAG = "CarrierDemoPasswordDialogFragment";
+    private static final String TAG = "CarrierDemoPasswordDF";
 
     private MessageDigest mMessageDigest;
 
@@ -130,6 +131,11 @@ public class CarrierDemoPasswordDialogFragment extends DialogFragment {
         final byte[] inputDigest = mMessageDigest.digest(input.getBytes());
         final String inputHash = HexDump.toHexString(inputDigest, 0, inputDigest.length, false);
         positiveButton.setEnabled(TextUtils.equals(passwordHash, inputHash));
+    }
+
+    @Override
+    public int getMetricsCategory() {
+        return MetricsEvent.CARRIER_DEMO_MODE_PASSWORD;
     }
 
     public interface Callback {

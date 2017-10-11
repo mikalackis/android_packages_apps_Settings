@@ -195,8 +195,6 @@ public class RadioInfo extends Activity {
     private Button updateSmscButton;
     private Button refreshSmscButton;
     private Button oemInfoButton;
-    private Button carrierProvisioningButton;
-    private Button triggercarrierProvisioningButton;
     private Switch imsVolteProvisionedSwitch;
     private Switch imsVtProvisionedSwitch;
     private Switch imsWfcProvisionedSwitch;
@@ -416,11 +414,6 @@ public class RadioInfo extends Activity {
         refreshSmscButton.setOnClickListener(mRefreshSmscButtonHandler);
         dnsCheckToggleButton = (Button) findViewById(R.id.dns_check_toggle);
         dnsCheckToggleButton.setOnClickListener(mDnsCheckButtonHandler);
-        carrierProvisioningButton = (Button) findViewById(R.id.carrier_provisioning);
-        carrierProvisioningButton.setOnClickListener(mCarrierProvisioningButtonHandler);
-        triggercarrierProvisioningButton = (Button) findViewById(R.id.trigger_carrier_provisioning);
-        triggercarrierProvisioningButton.setOnClickListener(
-                mTriggerCarrierProvisioningButtonHandler);
 
         oemInfoButton = (Button) findViewById(R.id.oem_info);
         oemInfoButton.setOnClickListener(mOemInfoButtonHandler);
@@ -502,11 +495,11 @@ public class RadioInfo extends Activity {
         log("onPause: unregister phone & data intents");
 
         mTelephonyManager.listen(mPhoneStateListener, PhoneStateListener.LISTEN_NONE);
-        phone.setCellInfoListRate(CELL_INFO_LIST_RATE_DISABLED);
+        mTelephonyManager.setCellInfoListRate(CELL_INFO_LIST_RATE_DISABLED);
     }
 
     private void restoreFromBundle(Bundle b) {
-        if (b == null) {
+        if(b == null) {
             return;
         }
 
@@ -869,7 +862,7 @@ public class RadioInfo extends Activity {
     }
 
     private final void updateNetworkType() {
-        if (phone != null) {
+        if(phone != null) {
             ServiceState ss = phone.getServiceState();
             dataNetwork.setText(ServiceState.rilRadioTechnologyToString(
                     phone.getServiceState().getRilDataRadioTechnology()));
@@ -1171,7 +1164,7 @@ public class RadioInfo extends Activity {
 
     void setImsConfigProvisionedState(int configItem, boolean state) {
         if (phone != null && mImsManager != null) {
-            QueuedWork.singleThreadExecutor().submit(new Runnable() {
+            QueuedWork.queue(new Runnable() {
                 public void run() {
                     try {
                         mImsManager.getConfigInterface().setProvisionedValue(
@@ -1181,7 +1174,7 @@ public class RadioInfo extends Activity {
                         Log.e(TAG, "setImsConfigProvisioned() exception:", e);
                     }
                 }
-            });
+            }, false);
         }
     }
 
@@ -1302,22 +1295,6 @@ public class RadioInfo extends Activity {
         }
     };
 
-    OnClickListener mCarrierProvisioningButtonHandler = new OnClickListener() {
-        public void onClick(View v) {
-            Intent intent = new Intent("com.android.settings.CARRIER_PROVISIONING");
-            getApplicationContext().sendBroadcast(
-                    intent, android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE);
-        }
-    };
-
-    OnClickListener mTriggerCarrierProvisioningButtonHandler = new OnClickListener() {
-        public void onClick(View v) {
-            Intent intent = new Intent("com.android.settings.TRIGGER_CARRIER_PROVISIONING");
-            getApplicationContext().sendBroadcast(
-                    intent, android.Manifest.permission.MODIFY_PHONE_STATE);
-        }
-    };
-
     AdapterView.OnItemSelectedListener mPreferredNetworkHandler =
             new AdapterView.OnItemSelectedListener() {
 
@@ -1339,7 +1316,7 @@ public class RadioInfo extends Activity {
 
         public void onItemSelected(AdapterView parent, View v, int pos, long id) {
             mCellInfoRefreshRateIndex = pos;
-            phone.setCellInfoListRate(mCellInfoRefreshRates[pos]);
+            mTelephonyManager.setCellInfoListRate(mCellInfoRefreshRates[pos]);
             updateAllCellInfo();
         }
 

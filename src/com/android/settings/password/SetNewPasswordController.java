@@ -77,8 +77,7 @@ final class SetNewPasswordController {
             }
         }
         // Create a wrapper of FingerprintManager for testing, see IFingerPrintManager for details.
-        final FingerprintManager fingerprintManager =
-                (FingerprintManager) context.getSystemService(Context.FINGERPRINT_SERVICE);
+        final FingerprintManager fingerprintManager = Utils.getFingerprintManagerOrNull(context);
         final IFingerprintManager fingerprintManagerWrapper =
                 fingerprintManager == null
                         ? null

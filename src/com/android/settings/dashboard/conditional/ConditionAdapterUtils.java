@@ -15,22 +15,22 @@
  */
 package com.android.settings.dashboard.conditional;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
-import android.animation.ObjectAnimator;
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.View;
-import android.view.View.OnLayoutChangeListener;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.ImageView;
-import com.android.internal.logging.MetricsLogger;
-import com.android.internal.logging.MetricsProto.MetricsEvent;
+
+import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
 import com.android.settings.R;
 import com.android.settings.dashboard.DashboardAdapter;
+import com.android.settings.overlay.FeatureFactory;
+import com.android.settingslib.WirelessUtils;
 
 public class ConditionAdapterUtils {
+    private static final String TAG = "ConditionAdapterUtils";
 
     public static void addDismiss(final RecyclerView recyclerView) {
         ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(0,
@@ -63,6 +63,11 @@ public class ConditionAdapterUtils {
     public static void bindViews(final Condition condition,
             DashboardAdapter.DashboardItemHolder view, boolean isExpanded,
             View.OnClickListener onClickListener, View.OnClickListener onExpandListener) {
+        if (condition instanceof AirplaneModeCondition) {
+            Log.d(TAG, "Airplane mode condition has been bound with "
+                    + "isActive=" + condition.isActive() + ". Airplane mode is currently " +
+                    WirelessUtils.isAirplaneModeOn(condition.mManager.getContext()));
+        }
         View card = view.itemView.findViewById(R.id.content);
         card.setTag(condition);
         card.setOnClickListener(onClickListener);
@@ -79,9 +84,17 @@ public class ConditionAdapterUtils {
         View detailGroup = view.itemView.findViewById(R.id.detail_group);
         CharSequence[] actions = condition.getActions();
         if (isExpanded != (detailGroup.getVisibility() == View.VISIBLE)) {
-            animateChange(view.itemView, view.itemView.findViewById(R.id.content),
-                    detailGroup, isExpanded, actions.length > 0);
+            if (isExpanded) {
+                final boolean hasButtons = actions.length > 0;
+                setViewVisibility(detailGroup, R.id.divider, hasButtons);
+                setViewVisibility(detailGroup, R.id.buttonBar, hasButtons);
+
+                detailGroup.setVisibility(View.VISIBLE);
+            } else {
+                detailGroup.setVisibility(View.GONE);
+            }
         }
+
         if (isExpanded) {
             view.summary.setText(condition.getSummary());
             for (int i = 0; i < 2; i++) {
@@ -94,9 +107,10 @@ public class ConditionAdapterUtils {
                     button.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            MetricsLogger.action(v.getContext(),
-                                    MetricsEvent.ACTION_SETTINGS_CONDITION_BUTTON,
-                                    condition.getMetricsConstant());
+                            Context context = v.getContext();
+                            FeatureFactory.getFactory(context).getMetricsFeatureProvider()
+                                    .action(context, MetricsEvent.ACTION_SETTINGS_CONDITION_BUTTON,
+                                            condition.getMetricsConstant());
                             condition.onActionClick(index);
                         }
                     });
@@ -105,43 +119,6 @@ public class ConditionAdapterUtils {
                 }
             }
         }
-    }
-
-    private static void animateChange(final View view, final View content,
-            final View detailGroup, final boolean visible, final boolean hasButtons) {
-        setViewVisibility(detailGroup, R.id.divider, hasButtons);
-        setViewVisibility(detailGroup, R.id.buttonBar, hasButtons);
-        final int beforeBottom = content.getBottom();
-        setHeight(detailGroup, visible ? LayoutParams.WRAP_CONTENT : 0);
-        detailGroup.setVisibility(View.VISIBLE);
-        view.addOnLayoutChangeListener(new OnLayoutChangeListener() {
-            public static final long DURATION = 250;
-
-            @Override
-            public void onLayoutChange(View v, int left, int top, int right, int bottom,
-                    int oldLeft, int oldTop, int oldRight, int oldBottom) {
-                final int afterBottom = content.getBottom();
-                v.removeOnLayoutChangeListener(this);
-                final ObjectAnimator animator = ObjectAnimator.ofInt(content, "bottom",
-                        beforeBottom, afterBottom);
-                animator.setDuration(DURATION);
-                animator.addListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        if (!visible) {
-                            detailGroup.setVisibility(View.GONE);
-                        }
-                    }
-                });
-                animator.start();
-            }
-        });
-    }
-
-    private static void setHeight(View detailGroup, int height) {
-        final LayoutParams params = detailGroup.getLayoutParams();
-        params.height = height;
-        detailGroup.setLayoutParams(params);
     }
 
     private static void setViewVisibility(View containerView, int viewId, boolean visible) {
